@@ -1,6 +1,7 @@
 "use server";
 
 import { CheckIfUserExist, CreateUser } from "@/lib/db";
+import { generateHashPassword } from "@/lib/hash-password";
 
 // User Sign Up Form Action
 export async function authFormSubmit(prevState, formData) {
@@ -10,9 +11,10 @@ export async function authFormSubmit(prevState, formData) {
       fullname: formData.get("fullname"),
       username: formData.get("username"),
       email: formData.get("email"),
-      // password: formData.get("password"),
+      password: formData.get("password"),
     };
 
+    console.log(userData);
     // Email Validation Regex
     let emailRegex =
       /^(?!.*\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -37,7 +39,7 @@ export async function authFormSubmit(prevState, formData) {
     }
 
     // Checking if the user already exist
-    const user = await CheckIfUserExist(userData?.email);
+    const user = await CheckIfEmailExist(userData?.email);
 
     // Checking if user has entered a valid email
     if (
@@ -54,22 +56,28 @@ export async function authFormSubmit(prevState, formData) {
     }
 
     // Checking if user has entered a valid password
-    // if (
-    //   userData?.password.trim() === "" ||
-    //   !userData.password ||
-    //   !passwordRegex.test(userData?.password)
-    // ) {
-    //   // Create a key password with a error message
-    //   errors.password =
-    //     "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
-    // }
+    if (
+      userData?.password.trim() === "" ||
+      !userData.password ||
+      !passwordRegex.test(userData?.password)
+    ) {
+      // Create a key password with a error message
+      errors.password =
+        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+    }
 
     if (Object.keys(errors).length > 0) {
       // Return errors object if errors object contains any error
       return { errors, userData };
     }
 
-    await CreateUser(userData);
+    const hashedPassword = generateHashPassword(userData?.password);
+    await CreateUser(
+      userData?.fullname,
+      userData?.email,
+      userData?.username,
+      hashedPassword
+    );
 
     return { message: "Account created successfully!" };
   } catch (error) {

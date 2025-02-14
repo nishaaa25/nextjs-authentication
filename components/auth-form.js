@@ -81,7 +81,7 @@ export default function AuthForm() {
             )}
           </div>
           {/* User Password Input */}
-          {/* <div className="relative mb-10">
+          <div className="relative mb-10">
             <input
               className="px-3 outline-purple-400 border-2 py-2 rounded-lg w-full relative"
               type="password"
@@ -95,7 +95,7 @@ export default function AuthForm() {
                 {state.errors.password}
               </p>
             )}
-          </div> */}
+          </div>
           {/*Form Submit Button */}
           <button
             type="submit"
