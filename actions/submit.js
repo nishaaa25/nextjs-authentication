@@ -1,14 +1,16 @@
 "use server";
 
+import { CheckIfUserExist, CreateUser } from "@/lib/db";
+
 // User Sign Up Form Action
-export async function authFormSubmit(formData) {
+export async function authFormSubmit(prevState, formData) {
   try {
     // Accessing user entered data
     const userData = {
       fullname: formData.get("fullname"),
       username: formData.get("username"),
       email: formData.get("email"),
-      password: formData.get("password"),
+      // password: formData.get("password"),
     };
 
     // Email Validation Regex
@@ -34,35 +36,43 @@ export async function authFormSubmit(formData) {
       errors.userName = "Please enter a valid username.";
     }
 
+    // Checking if the user already exist
+    const user = await CheckIfUserExist(userData?.email);
+
     // Checking if user has entered a valid email
     if (
       userData?.email.trim() === "" ||
       !userData.email ||
-      emailRegex.test(userData?.email)
+      !emailRegex.test(userData?.email)
     ) {
       // Create a key email with a error message
       errors.email = "Please enter a valid format like example@domain.com.";
     }
 
+    if (user.length > 0) {
+      errors.email = "User already exists with this email.";
+    }
+
     // Checking if user has entered a valid password
-    if (
-      userData?.password.trim() === "" ||
-      !userData.password ||
-      passwordRegex.test(userData?.password)
-    ) {
-      // Create a key password with a error message
-      errors.password =
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+    // if (
+    //   userData?.password.trim() === "" ||
+    //   !userData.password ||
+    //   !passwordRegex.test(userData?.password)
+    // ) {
+    //   // Create a key password with a error message
+    //   errors.password =
+    //     "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+    // }
+
+    if (Object.keys(errors).length > 0) {
+      // Return errors object if errors object contains any error
+      return { errors, userData };
     }
 
-    // Return errors object if errors object contains any error
-    if (errors?.length > 0) {
-      return { errors };
-    }
+    await CreateUser(userData);
 
-    // Returns the userdata if there is no error
-    console.log(userData);
+    return { message: "Account created successfully!" };
   } catch (error) {
-    throw new Error("Failed to get formData", error);
+    console.log("Failed to submit form");
   }
 }
